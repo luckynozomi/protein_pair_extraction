@@ -32,6 +32,8 @@
 #include <queue>
 #include <utility>
 #include <vector>
+#include <iterator>
+
 
 namespace aho_corasick {
 
@@ -491,7 +493,7 @@ namespace aho_corasick {
                     c = std::tolower(c);
                 }
                 cur_state = get_state(cur_state, c);
-                store_emits(pos, cur_state, collected_emits);
+                store_emits(pos, cur_state, collected_emits, text);
                 pos++;
             }
             if (d_config.is_only_whole_words()) {
@@ -607,18 +609,21 @@ namespace aho_corasick {
             auto emits = cur_state->get_emits();
             if (!emits.empty()) {
                 for (const auto& str : emits) {
-                    auto emit_str = typename emit_type::string_type(str.first);
-                    collected_emits.push_back(emit_type(pos - emit_str.size() + 1, pos, emit_str, str.second));
+                    // auto emit_str = typename emit_type::string_type(str.first);
+                    collected_emits.push_back(emit_type(pos - str.first.size() + 1, pos, str.first, str.second));
                 }
             }
         }
 
-        void store_emits(size_t pos, state_ptr_type cur_state) const {
+        void store_emits(size_t pos, state_ptr_type cur_state, emit_collection& collected_emits, string_ref_type text) const {
             auto emits = cur_state->get_emits();
             if (!emits.empty()) {
                 for (const auto& str : emits) {
-                    auto emit_str = typename emit_type::string_type(str.first);
-                    std::cout << pos - emit_str.size() + 1 << ' ' << pos << ' ' << emit_str << ' ' << str.second << std::endl;
+                    auto start = pos - str.first.size() + 1;
+                    if((start == 0 || !std::isalpha(text.at(start - 1))) &&
+                       (pos + 1 == text.size() || !std::isalpha(text.at(pos + 1)))) {
+                        collected_emits.push_back(emit_type(start, pos, str.first, str.second));
+                    }
                 }
             }
         }

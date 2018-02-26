@@ -5,4 +5,4 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CXX_FLAG '-march=native')
 
-add_executable(string_parsing_test main.cpp)
+add_executable(string_parsing_test src/main.cpp)
