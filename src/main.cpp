@@ -5,6 +5,54 @@
 #include <string>
 #include <regex>
 
+// alnum, ','
+
+
+std::string tolowerwseperator(const std::string& src, const char seperator = ' ')
+{
+
+    std::string ret;
+
+    ret.reserve(src.length());
+
+    std::string::const_iterator src_iterator = src.begin();
+
+    ret.push_back(seperator);
+
+    bool empty_char = true; // The previous char is empty char, and the seperator has already been placed (true).
+
+    while(src_iterator != src.end()){
+
+        char c = *src_iterator;
+
+        if(isalpha(c)) {
+            // ret.push_back(tolower(c));
+            ret.push_back(c);
+            empty_char = false;
+        } else if (isdigit (c)) {
+            ret.push_back(c);
+            empty_char = false;
+        } else if (c == '\'') {
+            ret.push_back(c);
+            empty_char = false;
+        } else if ((c == '-') || (c == '.') && (isalnum( *(src_iterator-1) ) && isalnum( *(src_iterator+1)) )  ) {
+            ret.push_back(c);
+            empty_char = false;
+        } else if (empty_char == false) {
+            empty_char = true;
+            ret.push_back(seperator);
+        }
+
+        ++src_iterator;
+    }
+
+    if(empty_char == false)
+        ret.push_back(seperator);
+
+    return ret;
+}
+
+
 int main() {
     std::cout.sync_with_stdio(false);
 
@@ -12,20 +60,17 @@ int main() {
     aho_corasick::trie trie;
 
     std::ifstream protein_names;
-    protein_names.open("/Users/xinsui/CLionProjects/protein_pair_extraction/data/UniProtNames.txt", std::ios::in);
+    protein_names.open("/Users/xinsui/CLionProjects/protein_pair_extraction/data/MyUniqProNamesFiltered.txt", std::ios::in);
     // protein_names.unsetf(std::ios_base::skipws);
     std::string protein_name;
     while(getline(protein_names, protein_name)) {
-        for(std::string::iterator c = protein_name.begin(); c != protein_name.end(); ++c){
-            *c = std::tolower(*c);
-        }
-        trie.insert(" " + protein_name + " ");
+        std::string protein_name_preprocessed = tolowerwseperator(protein_name);
+        trie.insert(protein_name_preprocessed);
     }
 
+    trie.remove_overlaps();
+
     protein_names.close();
-    trie.case_insensitive();
-
-
 
     std::ifstream abstracts;
     abstracts.open("/Users/xinsui/CLionProjects/protein_pair_extraction/data/pubmed_abstracts_2016.out", std::ios::in);
@@ -37,7 +82,8 @@ int main() {
 
     while(getline(abstracts, abstract)){
 
-        ++line_num;
+        if(++line_num == 2500 * 1000)
+            break;
 
         if(abstract.empty())
             continue;
@@ -65,8 +111,6 @@ int main() {
             continue;
         }
 
-        if(line_num == 1000)
-            break;
 
         abstract = abstract.substr(sentence_start);
 
@@ -84,15 +128,31 @@ int main() {
 
             aho_corasick::trie::emit_collection results;
 
-            std::string sentence = abstract.substr(start, length);
+            //std::cout << "*****" << std::endl;
+            //std::cout <<  abstract.substr(start, length) << std::endl;
+            //std::cout << tolowerwseperator( abstract.substr(start, length) ) << std::endl;
+            //std::cout << "*****" << std::endl;
 
-            sentence[sentence.length() - 1] = ' ';
+            std::string sentence = tolowerwseperator( abstract.substr(start, length) );
 
-            results = trie.parse_text(" " + sentence);
 
-            if(results.size() >= 2)
-                //std::cout << abstract.substr(start, length) << '\n';
-                std::cout << "t";
+            results = trie.parse_text(sentence);
+
+
+
+            if(results.size() >= 2) {
+                std::map<unsigned int, std::string> index_string;
+                for (auto &item : results)
+                    index_string.emplace(item.get_index(), item.get_keyword());
+
+                if(index_string.size() >= 2) {
+
+                    for (auto &item : index_string) {
+                        std::cout << "( " << item.first << ", "  << item.second  << " ) ";
+                    }
+                    std::cout << ' ' << abstract.substr(start, length) << '\n';
+                }
+            }
 
             start += length + 1; // The position where the start of the next sentence is.
         }
