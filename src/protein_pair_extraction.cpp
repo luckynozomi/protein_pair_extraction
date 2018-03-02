@@ -47,6 +47,11 @@ void protein_pair(const boost::filesystem::path& target_file_path, const boost::
     {
         ++line_number;
 
+        if(!parse_sentence(sentence, pubmed_index)){
+            std::cerr << line_number << " does not contain a valid sentence. \n";
+            continue;
+        }
+
         aho_corasick::trie::emit_collection results = trie.parse_text(sentence);
 
         if(results.size() >= 2)
@@ -66,9 +71,9 @@ int main(int argc, char* argv[]){
     boost::filesystem::path output_data_path = "STDIO";
 
     switch(argc){
-        case 3:
+        case 4:
             output_data_path = argv[3];
-        case 2:
+        case 3:
             pubmed_abstract_path = argv[2];
             protein_name_path = argv[1];
             break;

@@ -3,7 +3,7 @@ This project uses [Aho-Corasick algorithm](https://en.wikipedia.org/wiki/Aho%E2%
 
 ## Objective
 This project aims to achieve three objectives:
-1. Dictionary filtering: filter the words in the string dictionary by several documents such that they are not common words.
+1. Dictionary filtering: filter the words in the string dictionary by several documents so the filtered dictionary does not contain common words.
 2. Single matching: output the lines in the target file that matches one or more words in the string dictionary.
 3. Double matching: output the lines in the target file that matches two or more words in the string dictionary.
 
@@ -24,10 +24,10 @@ This project uses a self-modified implementation of Aho-Corasick algorithm on [G
 ```
 
 ## Usage
-The code builds two executables: 1) filter and 2) protein_pair.
+The code builds two executables: 1) protein_filter and 2) protein_pair.
 It is suggested to move the two executables to the directory where the dictionary file (protein name dictionary) and the target file (senteces of abstracts) are.
 ```
-./filter protein_name_file [threshold] [output]
+./protein_filter protein_name_file [threshold] [output]
 ```
 will filter the dictionary ```protein_name_file``` using all ```.txt``` files in subdirectory ```filter``` as targets. An entry in the dictrionary will be removed if it occures more than ```threshold``` times in any of those files. The result will be printed out to ```output```.
 By default, ```threshold=1``` and ```output=stdout```.
