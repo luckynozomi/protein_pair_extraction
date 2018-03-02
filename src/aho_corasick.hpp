@@ -550,6 +550,25 @@ namespace aho_corasick {
             size_t size = search_text.size();
             emit_collection remove_emits;
             for (const auto& e : collected_emits) {
+                if ((e.get_start() == 0 || std::isspace(search_text.at(e.get_start() - 1))) &&
+                    (e.get_end() + 1 == size || std::isspace(search_text.at(e.get_end() + 1)))
+                        ) {
+                    continue;
+                }
+                remove_emits.push_back(e);
+            }
+            for (auto& e : remove_emits) {
+                collected_emits.erase(
+                        std::find(collected_emits.begin(), collected_emits.end(), e)
+                );
+            }
+        }
+
+/* Original copy.
+        void remove_partial_matches(string_ref_type search_text, emit_collection& collected_emits) const {
+            size_t size = search_text.size();
+            emit_collection remove_emits;
+            for (const auto& e : collected_emits) {
                 if ((e.get_start() == 0 || !std::isalpha(search_text.at(e.get_start() - 1))) &&
                     (e.get_end() + 1 == size || !std::isalpha(search_text.at(e.get_end() + 1)))
                         ) {
@@ -563,6 +582,7 @@ namespace aho_corasick {
                 );
             }
         }
+*/
 
         state_ptr_type get_state(state_ptr_type cur_state, CharType c) const {
             state_ptr_type result = cur_state->next_state(c);
@@ -609,7 +629,7 @@ namespace aho_corasick {
             auto emits = cur_state->get_emits();
             if (!emits.empty()) {
                 for (const auto& str : emits) {
-                    // auto emit_str = typename emit_type::string_type(str.first);
+                    auto emit_str = typename emit_type::string_type(str.first);
                     collected_emits.push_back(emit_type(pos - str.first.size() + 1, pos, str.first, str.second));
                 }
             }
